@@ -21,9 +21,6 @@ function createFileInfoMap() {
 
     let fileInfoMap = new Map();
     const fileList = fs.readdirSync(staticPath);
-
-    //console.log("fileList", fileList);
-
     const contentTypeMap = {
         js: "application/javascript",
         css: "text/css",
@@ -55,6 +52,7 @@ const fileInfoMap = createFileInfoMap();
 // 将传入的文件推送到浏览器
 function push(stream, path) {
     //console.log("stream",stream,file);
+
     const file = fileInfoMap.get(path);
 
     if (!file) {
@@ -66,19 +64,18 @@ function push(stream, path) {
     });
 }
 
-
 server.on('stream', (stream, headers )=>{
     // 获取请求路径
     let requestPath = headers[HTTP2_HEADER_PATH];
-// 请求到 '/' 的请求返回 index.html
+    // 请求到 '/' 的请求返回 index.html
     if (requestPath === "/") {
         requestPath = "/index.html";
     }
 
     // 根据请求路径获取对应的文件信息
-    const fileInfo = fileInfoMap.get(requestPath);
-    console.log("fileInfo",requestPath,fileInfo);
-    return;
+    const fileInfo = fileInfoMap.get("/index.html");
+    // console.log("fileInfo",requestPath,fileInfo);
+
     if (!fileInfo) {
         stream.respond({
             [HTTP2_HEADER_STATUS]: 404
@@ -88,18 +85,15 @@ server.on('stream', (stream, headers )=>{
 
     // 访问首页时同时推送其他文件资源
     if (requestPath === "/index.html") {
-
-        for (var key in fileInfoMap.keys()) {
-            console.log("1111111", key);
+        for (var key of fileInfoMap.keys()) {
             push(stream, key);
         }
-    }
 
-    //console.log("fileInfoMap",fileInfo);
-    /*// 推送首页数据
+    }
+    // 推送首页数据
     stream.respondWithFD(fileInfo.fd, {
         ...fileInfo.headers
-    });*/
+    });
 })
 
 
